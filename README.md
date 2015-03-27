@@ -1,2 +1,4 @@
-# rdt_gbn
-Implement reliable data transfer by go nack n method.
+# Reliable Data Transfer by Go-Back-N
+
+## Sender
+## Receiver
