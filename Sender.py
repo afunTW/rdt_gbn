@@ -13,13 +13,17 @@ from rdt import *
 from tcpSocket import *
 
 if __name__ == '__main__':
+	DEST = 'localhost';
+	DESTPORT = 9999;
+	SRCPORT = 8888;
 
-	transport = rdt();
+	transport = rdt(SRCPORT, DESTPORT);
 	transport.getData("explain");
 	transport.segmentation();
 
-	# DEST = 'localhost';
-	# DESTPORT = 9999;
+	nextseqnum = transport.seqNlist[0];	#Test
+	data = transport.bindatalist[0];		#Test
+	transport.make_pkt(nextseqnum, data);
 
 	# sender = tcpSocket(8888);	# init will create a socket and random source port
 	# sender.connect(DEST, DESTPORT);
