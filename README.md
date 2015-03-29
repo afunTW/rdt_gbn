@@ -22,8 +22,8 @@ Also, we define the type of packet will be binary string.
 * Deliever data to upper layer
 
 ## To do list
-** Implement Go-Back-N
-** Get window size
-** Sequence number is accumulate by one or by offset?
-** Set timer
-** Finish basic receiver part
+* Implement Go-Back-N
+* Get window size
+* Sequence number is accumulate by one or by offset?
+* Set timer
+* Finish basic receiver part
