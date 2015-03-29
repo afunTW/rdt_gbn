@@ -5,9 +5,6 @@ import random
 
 import checksum
 
-DATA_INTSEQ = 0;
-DATA_BINSTRING = 1;
-
 class rdt(object):
 	def __init__(self, srcport, destport):
 		self.infile = None;
@@ -31,6 +28,10 @@ class rdt(object):
 	def getData(self, filename= None):
 		try: self.infile = sys.stdin if filename is None else open(filename, "r");
 		except Exception as e: print('Get data error: ', e); raise e;
+
+	def delieverData(self, filename= None):
+		if filename is None: sys.stdout.write(self.outfile);
+		else: f = open(filename, "w"); f.write(self.outfile);
 
 	def setMTU(self, MTU):
 		try: self.MTU = MTU;
@@ -77,3 +78,5 @@ class rdt(object):
 		check = checksum.generate_checksum(header + data);
 
 		return header+check+data
+
+	# def gbn_send(seld, data):
