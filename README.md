@@ -16,3 +16,14 @@ source port, destination port, sequence number, ack number, and checksum.
 Also, we define the type of packet will be binary string.
 
 ## Receiver
+* Get packet from unreliable data transfer
+* checksum, error detection
+* Send the ack back to sender
+* Deliever data to upper layer
+
+## To do list
+** Implement Go-Back-N
+** Get window size
+** Sequence number is accumulate by one or by offset?
+** Set timer
+** Finish basic receiver part
