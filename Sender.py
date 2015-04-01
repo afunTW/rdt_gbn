@@ -39,7 +39,7 @@ if __name__ == '__main__':
 	dt.segmentation();
 
 	# Manage corresponding seq# and sending packet
-	ACK = 1;
+	ACK = 0;
 	base_seq = 0
 	next_seq = 0
 	sndpkt = list([False for i in range(0,N)]);
@@ -76,6 +76,7 @@ if __name__ == '__main__':
 		################################## socket
 		if dt.corrupt(rcvpkt) is False:
 			base_seq = dt.getacksum(rcvpkt) + 1;
+			ACK = (ACK+1)%2;
 			if base_seq != next_seq: t.start();	# restart timer for base_seq pkt
 
 	# sender.close();

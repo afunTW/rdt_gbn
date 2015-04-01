@@ -49,6 +49,7 @@ if __name__ == '__main__':
 			################################## socket
 
 			expectedseqnum += 1;
+			ACK = (ACK+1)%2;
 
 		# default
 		################################## socket
