@@ -13,7 +13,6 @@ import sys
 
 from rdt import *
 from timer import *
-from tcpSocket import *
 
 # rdt global setting
 SEQ_DURATION = list([i for i in range(0,6)]);	# Guarantee seq# start from 0
@@ -21,11 +20,12 @@ N = int(len(SEQ_DURATION)/2);			# window size
 
 # udt global setting
 BUFFER_SIZE = 1024;
+HOP_COUNT = 10;
+DEST = 'localhost';
+DESTPORT = 9999;
+SRCPORT = 8888;
 
 if __name__ == '__main__':
-	DEST = 'localhost';
-	DESTPORT = 9999;
-	SRCPORT = 8888;
 
 	# sender = tcpSocket(8888);	# init will create a socket and random source port
 	# sender.connect(DEST, DESTPORT);

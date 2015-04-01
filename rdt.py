@@ -52,9 +52,6 @@ class rdt(object):
 			self.datalist.append(charlist[i:i+int(databits/16)])
 			self.bindatalist.append(bincharlist[i:i+int(databits/16)])
 
-	# Receiver
-	# def reassembly(self, seqdata):
-
 	def make_pkt(self, seqnum, ack, data=None):
 		print("seq= %d, ack= %d" % (seqnum, ack));
 
