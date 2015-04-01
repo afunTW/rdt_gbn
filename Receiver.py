@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
 	while True:
 		################################## socket
-		pkt = rdt_recv(BUFFER_SIZE);
+		pkt = udt_recv(BUFFER_SIZE);
 		################################## socket
 
 		# rdt_rcv(rcvpkt) && !corrupt(rcvpkt) && hasseqnum(rcvpkt, expectedseqnum)
