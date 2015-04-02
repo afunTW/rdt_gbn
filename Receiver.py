@@ -11,21 +11,21 @@
 import sys
 
 from rdt import *
-from tcpSocket import *
 
-BUFFER_SIZE = 1024;
+BUFFER_SIZE = 1024*8;
+HOST = '';
+DEST = 'localhost';
+DESTPORT = 8888;
+SRCPORT = 9990;
 
 if __name__ == '__main__':
-	DEST = 'localhost';
-	DESTPORT = 8888;
-	SRCPORT = 9999;
+	# socket
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
+	s.bind((HOST, SRCPORT));
+	s.listen(1);
 
-	# receiver = tcpSocket(9999);
-	# receiver.connect(DEST, DESTPORT);
-	# receiver.listen();
-	# receiver.recv();
-
-	dt = rdt(SRCPORT, DESTPORT);
+	# rdt
+	dt = rdt(SRCPORT, DESTPORT, 'server');
 	dt.setMTU(BUFFER_SIZE);	# Guarantee buffer size is greater equal than rdt.MTU
 
 	# init
@@ -34,8 +34,11 @@ if __name__ == '__main__':
 	sndpkt = dt.make_pkt(0, ACK);
 
 	while True:
+		client, address = s.accept();
 		################################## socket
-		pkt = udt_recv(BUFFER_SIZE);
+		print('Receive pkt')
+		pkt = client.recv(BUFFER_SIZE)
+		print(pkt)
 		################################## socket
 
 		# rdt_rcv(rcvpkt) && !corrupt(rcvpkt) && hasseqnum(rcvpkt, expectedseqnum)
@@ -45,7 +48,7 @@ if __name__ == '__main__':
 			sndpkt = make_pkt(expectedseqnum, ACK);
 
 			################################## socket
-			udt_send(sndpkt);
+			client.send(bytes(sndpkt, 'utf-8'));
 			################################## socket
 
 			expectedseqnum += 1;
@@ -53,7 +56,8 @@ if __name__ == '__main__':
 
 		# default
 		################################## socket
-		udt_send(sndpkt);
+		client.send(bytes(sndpkt, 'utf-8'));
 		################################## socket
 
-	# receiver.close();
+		client.close()
+	s.close()

@@ -1,5 +1,14 @@
 # Reliable Data Transfer by Go-Back-N
 
+## Packet format(bits)
+* srcport = packet[0:16]
+* destport = packet[16: 32]
+* seqnum = packet[32:64]
+* ack = packet[64:96]
+* checksum = packet[96:112]
+* data = packet[112:]
+* packet is binary string
+
 ## Sender
 * Get data from upper layer
 * Segmentation

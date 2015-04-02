@@ -19,22 +19,31 @@ SEQ_DURATION = list([i for i in range(0,6)]);	# Guarantee seq# start from 0
 N = int(len(SEQ_DURATION)/2);			# window size
 
 # udt global setting
-BUFFER_SIZE = 1024;
+BUFFER_SIZE = 1024*8;
 HOP_COUNT = 10;
 DEST = 'localhost';
-DESTPORT = 9999;
+DESTPORT = 9990;
 SRCPORT = 8888;
+
+def udt_send(pkt):
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.connect((DEST, DESTPORT))
+	s.send(bytes(pkt, 'utf-8'))
+	s.close();
+
+def udt_recv():
+	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.connect((DEST, DESTPORT))
+	data = s.recv(BUFFER_SIZE)
+	s.close()
+	return data
 
 if __name__ == '__main__':
 
-	# sender = tcpSocket(8888);	# init will create a socket and random source port
-	# sender.connect(DEST, DESTPORT);
-	# sender.send('Hello')
-
 	t = timer();
-	t.settime(1);	# sec
-	dt = rdt(SRCPORT, DESTPORT);
-	dt.setMTU(BUFFER_SIZE);	# Guarantee buffer size is greater equal than rdt.MTU
+	t.settime(0.2);	# sec
+	dt = rdt(SRCPORT, DESTPORT, 'client');
+	dt.setMTU(int(BUFFER_SIZE/8));	# Guarantee buffer size is greater equal than rdt.MTU
 	dt.getData("explain");
 	dt.segmentation();
 
@@ -45,17 +54,16 @@ if __name__ == '__main__':
 	sndpkt = list([False for i in range(0,N)]);
 	sndcount = 0
 
-	'''
-		# non-blocking problem
-	'''
 	while True:
 		data = dt.bindatalist[sndcount];
 
 		# rdt_send(data)
 		if next_seq < (base_seq + N) :
 			sndpkt[next_seq] = dt.make_pkt(next_seq, ACK, data);
-			print(sndpkt[next_seq])
+			# print(sndpkt[next_seq])
 			################################## socket
+			print('send pkt')
+			print(sndpkt[next_seq]);
 			udt_send(sndpkt[next_seq]);
 			################################## socket
 			if next_seq == base_seq: t.start();
@@ -63,20 +71,21 @@ if __name__ == '__main__':
 			sndcount += 1;
 
 		# timeout
+		print('default timer: ', t.default_timer())
 		if t.timeout is True:
 			print('timeout'); t.start();	#restart timer for base_seq pkt
 			for i in range(base_seq, next_seq):	# resend all unreceived packet in window
 				################################## socket
+				print('send pkt in timeout')
 				udt_send(sndpkt[i]);
 				################################## socket
 
 		# rdt_rcv(rcvpkt) && !corrupt(rcvpkt)
 		################################## socket
-		rcvpkt = udt_recv(BUFFER_SIZE);
+		print('recv pkt')
+		rcvpkt = udt_recv();
 		################################## socket
 		if dt.corrupt(rcvpkt) is False:
 			base_seq = dt.getacksum(rcvpkt) + 1;
 			ACK = (ACK+1)%2;
 			if base_seq != next_seq: t.start();	# restart timer for base_seq pkt
-
-	# sender.close();

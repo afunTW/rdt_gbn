@@ -1,36 +1,36 @@
 #!/usr/bin/python3
 
 import sys
+import socket
+import asyncio
 
 import checksum as cs
 
+################################################################################
+# Reliable data transfer
+################################################################################
 class rdt(object):
-	def __init__(self, srcport, destport):
+	def __init__(self, srcport, destport, host):
 		self.infile = None;
 		self.MTU = 1024;		# Maximum Transmission Unit, (bytes/ segment)
 		self.pktcount = None;
-
 		self.datalist=[];		# list of seperate data
 		self.bindatalist=[];# list of corresponding binary string by datalist
 
-		try: self.srcport = srcport; self.destport = destport;
-		except Exception as e: print('Error: ', e);
+		self.srcport = srcport;
+		self.destport = destport;
+		self.host = host.lower();
 
-	# Get data from upper layer
+	"""
+		Get/ Deliever data from/ to upper layer
+	"""
 	def getData(self, filename= None):
 		try: self.infile = sys.stdin if filename is None else open(filename, "r");
 		except Exception as e: print('Get data error: ', e); raise e;
-
-	# Deliever data to upper layer
 	def delieverData(self, filename= None):
 		if filename is None: sys.stdout.write(self.outfile);
 		else: f = open(filename, "w"); f.write(self.outfile);
 
-	def setMTU(self, MTU):
-		try: self.MTU = MTU;
-		except Exception as e: print('Set MTU error: ', e); raise e;
-
-	# Sender
 	def segmentation(self):
 		# Split the data into a list of char
 		charlist = list(list(ch for ch in line) for line in list(self.infile))
@@ -44,7 +44,7 @@ class rdt(object):
 		print("Create %d segments" % self.pktcount);
 
 		# Segmentation, assume MTU is even number
-		header_bits = 112;	# srcport(16)+ destport(16)+ seqnum(32)+ ACK(32)+ cs(16)(bits)
+		header_bits = 112;
 		databits = (self.MTU*8) - header_bits;	# bits
 		bincharlist = [cs._16bin(ord(i)) for i in charlist]
 
@@ -54,7 +54,6 @@ class rdt(object):
 
 	def make_pkt(self, seqnum, ack, data=None):
 		print("seq= %d, ack= %d" % (seqnum, ack));
-
 		header = cs._16bin(self.srcport)+cs._16bin(self.destport)+ cs._16bin(seqnum)+ cs._16bin(ack)
 		if data is not None:
 			data = cs._16bin(int(''.join(data), 2));	# convert list to string then pass to function
@@ -62,6 +61,9 @@ class rdt(object):
 			return header+check+data;
 		else: return	header + cs.generate_checksum(header);
 
+	def setMTU(self, MTU):
+		try: self.MTU = MTU;
+		except Exception as e: print('Set MTU error: ', e); raise e;
 	def corrupt(self, packet):
 		return False if cs.valid_ckecksum(packet) is True else True;
 	def getacksum(self, packet):
