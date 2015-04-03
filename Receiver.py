@@ -31,24 +31,27 @@ if __name__ == '__main__':
 	# init
 	ACK = 0
 	expectedseqnum = 0;
-	sndpkt = dt.make_pkt(0, ACK);
+	sndpkt = dt.make_pkt(0, ACK, encode= 'utf-8');
 
 	while True:
 		client, address = s.accept();
 		################################## socket
-		print('Receive pkt')
+		print('Receive pkt: ')
 		pkt = client.recv(BUFFER_SIZE)
-		print(pkt)
+		print(dt.showdata(pkt));
 		################################## socket
 
 		# rdt_rcv(rcvpkt) && !corrupt(rcvpkt) && hasseqnum(rcvpkt, expectedseqnum)
 		if dt.corrupt(pkt) is False and dt.hasseqnum(pkt, expectedseqnum) is True:
 			data = dt.extract(pkt);	# binary string of payload
-			dt.delieverData(data);
-			sndpkt = make_pkt(expectedseqnum, ACK);
+			# dt.delieverData(data);
+			print(dt.showdata(sndpkt));
+			sndpkt = dt.make_pkt(expectedseqnum, ACK, encode= 'utf-8');
 
 			################################## socket
-			client.send(bytes(sndpkt, 'utf-8'));
+			print('send ack back')
+			print(dt.showdata(sndpkt));
+			client.send(sndpkt);
 			################################## socket
 
 			expectedseqnum += 1;
@@ -56,7 +59,9 @@ if __name__ == '__main__':
 
 		# default
 		################################## socket
-		client.send(bytes(sndpkt, 'utf-8'));
+		print('default sending')
+		dt.showdata(sndpkt)
+		client.send(sndpkt);
 		################################## socket
 
 		client.close()

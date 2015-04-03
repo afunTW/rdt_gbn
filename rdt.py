@@ -52,14 +52,27 @@ class rdt(object):
 			self.datalist.append(charlist[i:i+int(databits/16)])
 			self.bindatalist.append(bincharlist[i:i+int(databits/16)])
 
-	def make_pkt(self, seqnum, ack, data=None):
+	def make_pkt(self, seqnum, ack, data=None, encode='utf-8'):
 		print("seq= %d, ack= %d" % (seqnum, ack));
-		header = cs._16bin(self.srcport)+cs._16bin(self.destport)+ cs._16bin(seqnum)+ cs._16bin(ack)
+		header = cs._16bin(self.srcport)+cs._16bin(self.destport)+ cs._32bin(seqnum)+ cs._32bin(ack)
 		if data is not None:
-			data = cs._16bin(int(''.join(data), 2));	# convert list to string then pass to function
-			check = cs.generate_checksum(header + data);
-			return header+check+data;
-		else: return	header + cs.generate_checksum(header);
+			bytesdata = bytes();
+			for i in range(0, len(data)): bytesdata += bytes(data[i], encode);
+			# data = cs._16bin(int(''.join(data)));	# convert list to string then pass to function
+			check = cs.generate_checksum(header + cs._binstring(bytesdata.decode(encode)));
+			return bytes(header+check, encode)+bytesdata;
+		else: return bytes(header + cs.generate_checksum(header), encode);
+
+	# Show the data in the bytes packet
+	def showdata(self, packet):
+		data = cs.getpayload(packet.decode('utf-8'));
+		datalist = [];
+		for i in range(0,len(data), 16):
+			chunk = chr(int(str(data[i:i+16]), 2));
+			# chunk = int(str(data[i:i+16]), 2)
+			# chunk = str(data[i:i+16])
+			datalist.append(chunk);
+		return datalist;
 
 	def setMTU(self, MTU):
 		try: self.MTU = MTU;
@@ -69,6 +82,6 @@ class rdt(object):
 	def getacksum(self, packet):
 		return int(str(cs.getack(packet)), 2);
 	def hasseqnum(self, rcvpkt, expectedseqnum):
-		return True if int(str(cs.getseq(packet)), 2) == expectedseqnum else False;
+		return True if int(str(cs.getseq(rcvpkt)), 2) == expectedseqnum else False;
 	def extract(self, packet):
 		return cs.getpayload(packet);

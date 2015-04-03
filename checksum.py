@@ -1,7 +1,13 @@
 #!/usr/bin/python3
 
+# _16bin, _32bin, _bin: type of msg is decimal integer
 def _16bin(msg):
 	return format(msg, '016b');
+def _32bin(msg):
+	return format(msg, '032b');
+def _binstring(msg):
+	_format = '0' + str(len(msg)) + 'b'
+	return format(int(msg, 2), _format)
 
 def generate_checksum(data):
 	check = 0;
