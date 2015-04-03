@@ -26,34 +26,34 @@ DEST = 'localhost';
 DESTPORT = 9990;
 SRCPORT = 8888;
 
-CORRUPTED_MESSAGE = 'CORRUPTED_MESSAGE_HERE'
-def string_to_bin(s):
-	r = "".join(format(ord(x), 'b') for x in s)
-	return r
-
 def decide_lost():
 	i = randint(0,100)
-	if i > 10:
-		return True
-	return False
+	print('decide_lost: ', (True if i>10 else False))
+	return True if i>10 else False
 
 def udt_send(pkt):
-	#if decide_lost():
-	#	print("The channel has lost the packet.")
-	#	return
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.connect((DEST, DESTPORT))
-	# s.send(bytes(pkt, 'utf-8'))
-	s.send(pkt);
-	s.close();
+	try:
+		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		s.connect((DEST, DESTPORT))
+		s.send(pkt);
+		s.close();
+	except Exception as e: print('udt_send socket error: ', e)
 
 def udt_recv():
-	if decide_lost():
-		return string_to_bin(CORRUPTED_MESSAGE)
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.connect((DEST, DESTPORT))
-	data = s.recv(BUFFER_SIZE)
-	s.close()
+	# if decide_lost() is True: return None;
+	 # else:
+	print('---Enter udt_recv else---');
+	try:
+		print('---Enter udt_recv try---');
+		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
+		print('Create a socket');
+		s.connect((DEST, DESTPORT));
+		print('Sockket connect')
+		print('start to udt_recv')
+		data = s.recv(BUFFER_SIZE)
+		print('end of udt_recv')
+		s.close()
+	except Exception as e: print('udt_recv socket error: ', e)
 	return data
 
 if __name__ == '__main__':
@@ -74,12 +74,10 @@ if __name__ == '__main__':
 
 	while True:
 		data = dt.bindatalist[sndcount];
-		# print(dt.showdata(data));
 
 		# rdt_send(data)
 		if next_seq < (base_seq + N) :
 			sndpkt[next_seq] = dt.make_pkt(next_seq, ACK, data, 'utf-8');
-			# print(sndpkt[next_seq])
 			################################## socket
 			print('send pkt')
 			# print(dt.showdata(sndpkt[next_seq]));
@@ -90,21 +88,24 @@ if __name__ == '__main__':
 			sndcount += 1;
 
 		# timeout
-		print('default timer: ', t.default_timer())
 		if t.timeout() is True:
-			print('timeout'); t.start();	#restart timer for base_seq pkt
+			print('Timeout!!!'); t.start();	#restart timer for base_seq pkt
 			for i in range(base_seq, next_seq):	# resend all unreceived packet in window
 				################################## socket
 				print('resend pkt in timeout')
 				udt_send(sndpkt[i]);
+				print(dt.showdata(sndpkt[i]));
 				################################## socket
 
 		# rdt_rcv(rcvpkt) && !corrupt(rcvpkt)
 		################################## socket
-		print('recv pkt')
 		rcvpkt = udt_recv();
+		print('rcvpkt: ' ,rcvpkt)
 		################################## socket
-		if dt.corrupt(rcvpkt) is False:
+		if rcvpkt is not None and dt.corrupt(rcvpkt) is False:
+			print('recv ack')
 			base_seq = dt.getacksum(rcvpkt) + 1;
 			ACK = (ACK+1)%2;
 			if base_seq != next_seq: t.start();	# restart timer for base_seq pkt
+
+		print();

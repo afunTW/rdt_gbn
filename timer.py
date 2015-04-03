@@ -11,7 +11,7 @@ class timer():
 			self.default_timer = time.time;	# On most other platforms the best timer is time.time
 	def settime(self, sec):
 		self.set_time = sec;
-		print("Set timer: %d sec" % self.set_time);
+		print("Set timer: %f sec" % self.set_time);
 	def start(self):
 		self.start_time = self.default_timer();
 		print("Start timer: ", self.start_time);

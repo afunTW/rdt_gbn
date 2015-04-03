@@ -37,7 +37,8 @@ if __name__ == '__main__':
 		client, address = s.accept();
 		################################## socket
 		print('Receive pkt: ')
-		pkt = client.recv(BUFFER_SIZE)
+		try: pkt = client.recv(BUFFER_SIZE);
+		except Exception as e: print('client.recv error: ', e)
 		print(dt.showdata(pkt));
 		################################## socket
 
@@ -60,8 +61,8 @@ if __name__ == '__main__':
 		# default
 		################################## socket
 		print('default sending')
-		dt.showdata(sndpkt)
 		client.send(sndpkt);
+		print('sndpkt: ', sndpkt)
 		################################## socket
 
 		client.close()
