@@ -1,14 +1,5 @@
 #!/usr/bin/python3
 
-"""
-	1. Create tcp socket, bind, connect
-	2. Get data from upper layer
-	3. Segmentation
-	4. Manage seq# and ack#
-	5. Sending empty data, S_seq# and S_ack#
-	6. Sending a list of packet
-	7. Close socket
-"""
 import sys
 import random
 

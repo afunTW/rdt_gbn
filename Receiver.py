@@ -1,13 +1,5 @@
 #!/usr/bin/python3
 
-"""
-	1. Create tcp socket, bind, connect, listen
-	2. Receive the first empty packet
-	3. Get the S_seq# and S_ack
-	4. Sending R_seq# and R_ack
-	5. Check checksum, send ack back
-	6. Seperate packet into segment, deliever to upper layer
-"""
 import sys
 
 from rdt import *
