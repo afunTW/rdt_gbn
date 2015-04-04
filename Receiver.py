@@ -53,7 +53,7 @@ if __name__ == '__main__':
 					sndpkt = dt.make_pkt(expectedseqnum, ACK);
 
 					################################## socket
-					print('ready to send ack ', sndpkt)
+					print('ready to send get ack sum: ', expectedseqnum)
 					client.send(sndpkt);
 					print('end of send ack')
 					################################## socket

@@ -15,7 +15,7 @@ class rdt(object):
 		self.MTU = 1024;		# Maximum Transmission Unit, (bytes/ segment)
 		self.pktcount = None;
 		self.datalist=[];		# list of seperate data
-		self.bindatalist=[];# list of corresponding binary string by datalist
+		self.bindatalist=[];	# list of corresponding binary string by datalist
 
 		self.srcport = srcport;
 		self.destport = destport;
@@ -52,7 +52,6 @@ class rdt(object):
 			self.bindatalist.append(bincharlist[i:i+int(databits/16)])
 
 	def make_pkt(self, seqnum, ack, data=None, encode='utf-8'):
-		print("seq= %d, ack= %d" % (seqnum, ack));
 		header = cs._16bin(self.srcport)+cs._16bin(self.destport)+ cs._32bin(seqnum)+ cs._32bin(ack)
 		if data is not None:
 			bytesdata = bytes();

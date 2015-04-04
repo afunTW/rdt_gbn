@@ -36,6 +36,7 @@ def string_to_bin(s):
 
 def decide_lost():
 	i = randint(0,100);
+	# return False;
 	return True if i > 50 else False
 
 def initialize_socket():
@@ -90,30 +91,31 @@ if __name__ == '__main__':
 	dt.setMTU(int(BUFFER_SIZE/8));	# Guarantee buffer size is greater equal than rdt.MTU
 	dt.getData("explain.txt");
 	dt.segmentation();
+	# dt.bindatalist.append(None);	# Last empty packet -> end of data transmission
+	# dt.pktcount += 1;
 
 	# Manage corresponding seq# and sending packet
 	ACK = 0;
 	base_seq = 0
 	next_seq = 0
-	sndpkt = list([False for i in range(0,len(SEQ_DURATION))]);
-	sndcount = 0
+	sndpkt = list([False for i in range(0,dt.pktcount)]);
 
-	while sndcount < len(dt.bindatalist)-1:
-		data = dt.bindatalist[sndcount];
+	while base_seq < len(dt.bindatalist):
+		print()
+		if next_seq < len(dt.bindatalist): data = dt.bindatalist[next_seq];
+		else: data = None; sndpkt.append(False);
 		print('base: %d, next: %d' % (base_seq, next_seq))
 		# rdt_send(data)
 		if next_seq < (base_seq + N) :
-			print(next_seq, ' in total ', len(sndpkt))
 			sndpkt[next_seq] = dt.make_pkt(next_seq, ACK, data);
 			# print(sndpkt[next_seq])
 			################################## socket
-			print('send pkt')
+			print('send pkt', 'seq#: ', next_seq, ' in total ', len(sndpkt));
 			# print(dt.showdata(sndpkt[next_seq]));
 			udt_send(sndpkt[next_seq]);
 			################################## socket
 			if next_seq == base_seq: t.start();
-			next_seq = (next_seq + 1) % len(SEQ_DURATION);
-			sndcount += 1;
+			next_seq += 1;
 
 		# timeout
 		if t.timeout() is True:
@@ -127,12 +129,11 @@ if __name__ == '__main__':
 		# rdt_rcv(rcvpkt) && !corrupt(rcvpkt)
 		################################## socket
 		rcvpkt = udt_recv();
-		if rcvpkt is None: continue;
+		if rcvpkt is None: print('rcvpkt is None'); continue;
 		################################## socket
 		if rcvpkt and dt.corrupt(rcvpkt) is False:
 			print('packet received, get acksum: ', dt.getacksum(rcvpkt))
 			base_seq = dt.getacksum(rcvpkt);
 			ACK = (ACK+1)%2;
 			if base_seq != next_seq: t.start();	# restart timer for base_seq pkt
-		print()
 	udt_channel_close()
