@@ -64,7 +64,8 @@ def udt_recv():
 		print(data)
 
 		#here we simulate corruption
-		if decide_lost():	data = flip_bits(data);
+		# if decide_lost():	data = flip_bits(data);
+		if decide_lost(): return None;
 
 		return data
 	except socket.timeout: return None;

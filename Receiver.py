@@ -35,21 +35,18 @@ if __name__ == '__main__':
 
 	while True:
 		client, address = s.accept();
-		################################## socket
-		print('Receive pkt')
-
 		is_receiving = True
 		count = 0
 		while is_receiving:
 			try:
-				pkt = client.recv(BUFFER_SIZE)
-				count = count + 1
-				# print(dt.showdata(pkt));
-				print ("Received:", count)
+				################################## socket
+				pkt = client.recv(BUFFER_SIZE);
 				################################## socket
 
 				# rdt_rcv(rcvpkt) && !corrupt(rcvpkt) && hasseqnum(rcvpkt, expectedseqnum)
 				if dt.corrupt(pkt) is False and dt.hasseqnum(pkt, expectedseqnum) is True:
+					count = count + 1;
+					print ("Received:", count);
 					data = dt.extract(pkt);	# binary string of payload
 					# dt.delieverData(data);
 					print(dt.showdata(pkt));
