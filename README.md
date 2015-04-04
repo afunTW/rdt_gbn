@@ -29,3 +29,7 @@ Also, we define the type of packet will be binary string.
 * checksum, error detection
 * Send the ack back to sender
 * Deliever data to upper layer
+
+## To do list
+* multiplexing
+* sliding window
