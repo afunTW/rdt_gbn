@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
 	# init
 	ACK = 0
-	expectedseqnum = 0;
+	expectedseqnum = 1;
 	sndpkt = dt.make_pkt(0, ACK);
 
 	while True:
@@ -39,6 +39,7 @@ if __name__ == '__main__':
 		count = 0
 		while is_receiving:
 			try:
+				# client, address = s.accept();
 				################################## socket
 				pkt = client.recv(BUFFER_SIZE);
 				################################## socket
@@ -53,9 +54,8 @@ if __name__ == '__main__':
 					sndpkt = dt.make_pkt(expectedseqnum, ACK);
 
 					################################## socket
-					print('ready to send get ack sum: ', expectedseqnum)
 					client.send(sndpkt);
-					print('end of send ack')
+					print('Sending acksum: ', expectedseqnum);
 					################################## socket
 
 					expectedseqnum += 1;
@@ -68,6 +68,7 @@ if __name__ == '__main__':
 			except socket.error:
 				#here the Sender close the socket
 				is_receiving = False
+		client.close()
 
 		#client.close()
 	s.close()

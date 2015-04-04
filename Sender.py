@@ -10,11 +10,10 @@
 	7. Close socket
 """
 import sys
+import random
 
 from rdt import *
 from timer import *
-from random import randint
-from time import sleep
 
 # rdt global setting
 SEQ_DURATION = list([i for i in range(0,6)]);	# Guarantee seq# start from 0
@@ -26,18 +25,9 @@ HOP_COUNT = 10;
 DEST = 'localhost';
 DESTPORT = 9990;
 SRCPORT = 8888;
+UDT_SOCKET = None;
 
-UDT_SOCKET = None
-CORRUPTED_MESSAGE = 'CORRUPTED_MESSAGE_HERE'
-
-def string_to_bin(s):
-	r = "".join(format(ord(x), 'b') for x in s)
-	return r
-
-def decide_lost():
-	i = randint(0,100);
-	# return False;
-	return True if i > 50 else False
+def decide_lost(): return True if random.randint(0,100) > 60 else False;
 
 def initialize_socket():
 	global UDT_SOCKET
@@ -47,11 +37,7 @@ def initialize_socket():
 		UDT_SOCKET.settimeout(1)
 
 def udt_send(pkt):
-	global UDT_SOCKET
-	if decide_lost():
-		print("---Trigger: data lost---")
-		sleep(0.5)
-		return
+	if decide_lost(): print("############### Trigger: data lost"); time.sleep(0.5); return;
 
 	initialize_socket()
 	UDT_SOCKET.send(pkt)
@@ -59,21 +45,14 @@ def udt_send(pkt):
 def udt_recv():
 	global UDT_SOCKET
 	initialize_socket()
-	data = None
 	try:
-		data = UDT_SOCKET.recv(BUFFER_SIZE)
-		print('length of udt_recv data: ', len(data))
-
-		#here we simulate corruption
-		if decide_lost(): data = flip_bits(data);
-
-		return data
+		data = UDT_SOCKET.recv(BUFFER_SIZE);
+		return flip_bits(data) if decide_lost() else data;
 	except socket.timeout: return None;
 	except socket.error as e: print("Socket error: ", e);  return None;
 
 def flip_bits(data):
-	print("---Trigger: data is flipped---")
-	# return string_to_bin(CORRUPTED_MESSAGE)
+	print("############### Trigger: data is flipped");
 	return None
 
 #close the channel so that the receiver can take another connect
@@ -91,8 +70,6 @@ if __name__ == '__main__':
 	dt.setMTU(int(BUFFER_SIZE/8));	# Guarantee buffer size is greater equal than rdt.MTU
 	dt.getData("explain.txt");
 	dt.segmentation();
-	# dt.bindatalist.append(None);	# Last empty packet -> end of data transmission
-	# dt.pktcount += 1;
 
 	# Manage corresponding seq# and sending packet
 	ACK = 0;
@@ -101,17 +78,14 @@ if __name__ == '__main__':
 	sndpkt = list([False for i in range(0,dt.pktcount)]);
 
 	while base_seq < len(dt.bindatalist):
-		print()
 		if next_seq < len(dt.bindatalist): data = dt.bindatalist[next_seq];
 		else: data = None; sndpkt.append(False);
-		print('base: %d, next: %d' % (base_seq, next_seq))
+
 		# rdt_send(data)
 		if next_seq < (base_seq + N) :
 			sndpkt[next_seq] = dt.make_pkt(next_seq, ACK, data);
-			# print(sndpkt[next_seq])
 			################################## socket
-			print('send pkt', 'seq#: ', next_seq, ' in total ', len(sndpkt));
-			# print(dt.showdata(sndpkt[next_seq]));
+			print('\nsend pkt', 'seq#: ', next_seq);
 			udt_send(sndpkt[next_seq]);
 			################################## socket
 			if next_seq == base_seq: t.start();
@@ -129,7 +103,7 @@ if __name__ == '__main__':
 		# rdt_rcv(rcvpkt) && !corrupt(rcvpkt)
 		################################## socket
 		rcvpkt = udt_recv();
-		if rcvpkt is None: print('rcvpkt is None'); continue;
+		if rcvpkt is None: continue;
 		################################## socket
 		if rcvpkt and dt.corrupt(rcvpkt) is False:
 			print('packet received, get acksum: ', dt.getacksum(rcvpkt))
