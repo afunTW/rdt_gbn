@@ -20,10 +20,10 @@ def generate_checksum(data):
 
 	return format(int(check,2)^0xffff, '016b');	# 1's complement
 
-def valid_ckecksum(pkt):
+def valid_ckecksum(pkt, encode):
 	checksum = getchecksum(pkt);
 	data = pkt[0:96]+pkt[112:];
-	return True if generate_checksum(data) == checksum else False;
+	return True if generate_checksum(data) == checksum.decode(encode) else False;
 
 def getsrcport(pkt): return pkt[0:16];
 def getdestport(pkt): return pkt[16:32];

@@ -14,6 +14,7 @@ import sys
 from rdt import *
 from timer import *
 from random import randint
+from time import sleep
 
 # rdt global setting
 SEQ_DURATION = list([i for i in range(0,6)]);	# Guarantee seq# start from 0
@@ -26,43 +27,67 @@ DEST = 'localhost';
 DESTPORT = 9990;
 SRCPORT = 8888;
 
+UDT_SOCKET = None
+CORRUPTED_MESSAGE = 'CORRUPTED_MESSAGE_HERE'
+
+def string_to_bin(s):
+	r = "".join(format(ord(x), 'b') for x in s)
+	return r
+
 def decide_lost():
-	i = randint(0,100)
-	print('decide_lost: ', (True if i>10 else False))
-	return True if i>10 else False
+	i = randint(0,100);
+	return True if i > 90 else False
+
+def initialize_socket():
+	global UDT_SOCKET
+	if UDT_SOCKET is None:
+		UDT_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		UDT_SOCKET.connect((DEST, DESTPORT))
+		UDT_SOCKET.settimeout(1)
 
 def udt_send(pkt):
-	try:
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		s.connect((DEST, DESTPORT))
-		s.send(pkt);
-		s.close();
-	except Exception as e: print('udt_send socket error: ', e)
+	global UDT_SOCKET
+	if decide_lost():
+		print("---Trigger: data lost---")
+		sleep(0.5)
+		return
+
+	initialize_socket()
+	UDT_SOCKET.send(pkt)
 
 def udt_recv():
-	# if decide_lost() is True: return None;
-	 # else:
-	print('---Enter udt_recv else---');
+	global UDT_SOCKET
+	initialize_socket()
+	data = None
 	try:
-		print('---Enter udt_recv try---');
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
-		print('Create a socket');
-		s.connect((DEST, DESTPORT));
-		print('Sockket connect')
-		print('start to udt_recv')
-		data = s.recv(BUFFER_SIZE)
-		print('end of udt_recv')
-		s.close()
-	except Exception as e: print('udt_recv socket error: ', e)
-	return data
+		data = UDT_SOCKET.recv(BUFFER_SIZE)
+		print(data)
+
+		#here we simulate corruption
+		if decide_lost():	data = flip_bits(data);
+
+		return data
+	except socket.timeout: return None;
+	except socket.error as e: print("Socket error: ", e);  return None;
+
+def flip_bits(data):
+	print("---Trigger: data is flipped---")
+	return string_to_bin(CORRUPTED_MESSAGE)
+
+#close the channel so that the receiver can take another connect
+def udt_channel_close():
+	global UDT_SOCKET
+	if UDT_SOCKET is not None:
+		UDT_SOCKET.close()
+		UDT_SOCKET = None
 
 if __name__ == '__main__':
 
 	t = timer();
 	t.settime(0.2);	# sec
-	dt = rdt(SRCPORT, DESTPORT, 'client');
+	dt = rdt(SRCPORT, DESTPORT);
 	dt.setMTU(int(BUFFER_SIZE/8));	# Guarantee buffer size is greater equal than rdt.MTU
-	dt.getData("explain");
+	dt.getData("explain.txt");
 	dt.segmentation();
 
 	# Manage corresponding seq# and sending packet
@@ -72,12 +97,13 @@ if __name__ == '__main__':
 	sndpkt = list([False for i in range(0,N)]);
 	sndcount = 0
 
-	while True:
+	while sndcount < len(dt.bindatalist)-1:
 		data = dt.bindatalist[sndcount];
 
 		# rdt_send(data)
 		if next_seq < (base_seq + N) :
-			sndpkt[next_seq] = dt.make_pkt(next_seq, ACK, data, 'utf-8');
+			sndpkt[next_seq] = dt.make_pkt(next_seq, ACK, data);
+			# print(sndpkt[next_seq])
 			################################## socket
 			print('send pkt')
 			# print(dt.showdata(sndpkt[next_seq]));
@@ -92,20 +118,19 @@ if __name__ == '__main__':
 			print('Timeout!!!'); t.start();	#restart timer for base_seq pkt
 			for i in range(base_seq, next_seq):	# resend all unreceived packet in window
 				################################## socket
-				print('resend pkt in timeout')
+				print('send seq= %d pkt in timeout' % i)
 				udt_send(sndpkt[i]);
-				print(dt.showdata(sndpkt[i]));
 				################################## socket
 
 		# rdt_rcv(rcvpkt) && !corrupt(rcvpkt)
 		################################## socket
 		rcvpkt = udt_recv();
-		print('rcvpkt: ' ,rcvpkt)
+		# if rcvpkt is None: continue;
 		################################## socket
-		if rcvpkt is not None and dt.corrupt(rcvpkt) is False:
-			print('recv ack')
+		if rcvpkt and dt.corrupt(rcvpkt) is False:
+			print('packet received')
 			base_seq = dt.getacksum(rcvpkt) + 1;
 			ACK = (ACK+1)%2;
 			if base_seq != next_seq: t.start();	# restart timer for base_seq pkt
-
-		print();
+		print()
+	udt_channel_close()

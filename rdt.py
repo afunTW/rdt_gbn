@@ -10,7 +10,7 @@ import checksum as cs
 # Reliable data transfer
 ################################################################################
 class rdt(object):
-	def __init__(self, srcport, destport, host):
+	def __init__(self, srcport, destport):
 		self.infile = None;
 		self.MTU = 1024;		# Maximum Transmission Unit, (bytes/ segment)
 		self.pktcount = None;
@@ -19,7 +19,6 @@ class rdt(object):
 
 		self.srcport = srcport;
 		self.destport = destport;
-		self.host = host.lower();
 
 	"""
 		Get/ Deliever data from/ to upper layer
@@ -58,7 +57,6 @@ class rdt(object):
 		if data is not None:
 			bytesdata = bytes();
 			for i in range(0, len(data)): bytesdata += bytes(data[i], encode);
-			# data = cs._16bin(int(''.join(data)));	# convert list to string then pass to function
 			check = cs.generate_checksum(header + cs._binstring(bytesdata.decode(encode)));
 			return bytes(header+check, encode)+bytesdata;
 		else: return bytes(header + cs.generate_checksum(header), encode);
@@ -69,19 +67,19 @@ class rdt(object):
 		datalist = [];
 		for i in range(0,len(data), 16):
 			chunk = chr(int(str(data[i:i+16]), 2));
-			# chunk = int(str(data[i:i+16]), 2)
-			# chunk = str(data[i:i+16])
 			datalist.append(chunk);
 		return datalist;
 
 	def setMTU(self, MTU):
 		try: self.MTU = MTU;
 		except Exception as e: print('Set MTU error: ', e); raise e;
-	def corrupt(self, packet):
-		return False if cs.valid_ckecksum(packet) is True else True;
+	def corrupt(self, packet, encode='utf-8'):
+		return False if cs.valid_ckecksum(packet, encode) is True else True;
 	def getacksum(self, packet):
-		return int(str(cs.getack(packet)), 2);
+		return int(cs.getack(packet), 2);
 	def hasseqnum(self, rcvpkt, expectedseqnum):
-		return True if int(str(cs.getseq(rcvpkt)), 2) == expectedseqnum else False;
+		return True if int(cs.getseq(rcvpkt), 2) == expectedseqnum else False;
+	def is_mypkt(self, receivepacket):
+		return True if int(cs.getdestport(receivepacket), 2) == self.srcport else False;
 	def extract(self, packet):
 		return cs.getpayload(packet);

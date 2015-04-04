@@ -25,45 +25,52 @@ if __name__ == '__main__':
 	s.listen(1);
 
 	# rdt
-	dt = rdt(SRCPORT, DESTPORT, 'server');
+	dt = rdt(SRCPORT, DESTPORT);
 	dt.setMTU(BUFFER_SIZE);	# Guarantee buffer size is greater equal than rdt.MTU
 
 	# init
 	ACK = 0
 	expectedseqnum = 0;
-	sndpkt = dt.make_pkt(0, ACK, encode= 'utf-8');
+	sndpkt = dt.make_pkt(0, ACK);
 
 	while True:
 		client, address = s.accept();
 		################################## socket
-		print('Receive pkt: ')
-		try: pkt = client.recv(BUFFER_SIZE);
-		except Exception as e: print('client.recv error: ', e)
-		print(dt.showdata(pkt));
-		################################## socket
+		print('Receive pkt')
 
-		# rdt_rcv(rcvpkt) && !corrupt(rcvpkt) && hasseqnum(rcvpkt, expectedseqnum)
-		if dt.corrupt(pkt) is False and dt.hasseqnum(pkt, expectedseqnum) is True:
-			data = dt.extract(pkt);	# binary string of payload
-			# dt.delieverData(data);
-			print(dt.showdata(sndpkt));
-			sndpkt = dt.make_pkt(expectedseqnum, ACK, encode= 'utf-8');
+		is_receiving = True
+		count = 0
+		while is_receiving:
+			try:
+				pkt = client.recv(BUFFER_SIZE)
+				count = count + 1
+				# print(dt.showdata(pkt));
+				print ("Received:", count)
+				################################## socket
 
-			################################## socket
-			print('send ack back')
-			print(dt.showdata(sndpkt));
-			client.send(sndpkt);
-			################################## socket
+				# rdt_rcv(rcvpkt) && !corrupt(rcvpkt) && hasseqnum(rcvpkt, expectedseqnum)
+				if dt.corrupt(pkt) is False and dt.hasseqnum(pkt, expectedseqnum) is True:
+					data = dt.extract(pkt);	# binary string of payload
+					# dt.delieverData(data);
+					print(dt.showdata(pkt));
+					sndpkt = dt.make_pkt(expectedseqnum, ACK);
 
-			expectedseqnum += 1;
-			ACK = (ACK+1)%2;
+					################################## socket
+					print('ready to send ack ', sndpkt)
+					client.send(sndpkt);
+					print('end of send ack')
+					################################## socket
 
-		# default
-		################################## socket
-		print('default sending')
-		client.send(sndpkt);
-		print('sndpkt: ', sndpkt)
-		################################## socket
+					expectedseqnum += 1;
+					ACK = (ACK+1)%2;
 
-		client.close()
+				# default
+				################################## socket
+				else: client.send(sndpkt);
+				################################## socket
+			except socket.error:
+				#here the Sender close the socket
+				is_receiving = False
+
+		#client.close()
 	s.close()
