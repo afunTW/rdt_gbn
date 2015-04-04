@@ -94,7 +94,7 @@ if __name__ == '__main__':
 	ACK = 0;
 	base_seq = 0
 	next_seq = 0
-	sndpkt = list([False for i in range(0,N)]);
+	sndpkt = list([False for i in range(0,len(SEQ_DURATION))]);
 	sndcount = 0
 
 	while sndcount < len(dt.bindatalist)-1:
@@ -102,6 +102,7 @@ if __name__ == '__main__':
 
 		# rdt_send(data)
 		if next_seq < (base_seq + N) :
+			print(next_seq, ' in total ', len(sndpkt))
 			sndpkt[next_seq] = dt.make_pkt(next_seq, ACK, data);
 			# print(sndpkt[next_seq])
 			################################## socket
@@ -125,7 +126,7 @@ if __name__ == '__main__':
 		# rdt_rcv(rcvpkt) && !corrupt(rcvpkt)
 		################################## socket
 		rcvpkt = udt_recv();
-		# if rcvpkt is None: continue;
+		if rcvpkt is None: continue;
 		################################## socket
 		if rcvpkt and dt.corrupt(rcvpkt) is False:
 			print('packet received')
