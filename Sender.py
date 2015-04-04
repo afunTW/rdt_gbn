@@ -36,7 +36,7 @@ def string_to_bin(s):
 
 def decide_lost():
 	i = randint(0,100);
-	return True if i > 90 else False
+	return True if i > 50 else False
 
 def initialize_socket():
 	global UDT_SOCKET
