@@ -76,7 +76,7 @@ class rdt(object):
 	def corrupt(self, packet, encode='utf-8'):
 		return False if cs.valid_ckecksum(packet, encode) is True else True;
 	def getacksum(self, packet):
-		return int(cs.getack(packet), 2);
+		return int(cs.getseq(packet), 2);
 	def hasseqnum(self, rcvpkt, expectedseqnum):
 		return True if int(cs.getseq(rcvpkt), 2) == expectedseqnum else False;
 	def is_mypkt(self, receivepacket):

@@ -61,11 +61,10 @@ def udt_recv():
 	data = None
 	try:
 		data = UDT_SOCKET.recv(BUFFER_SIZE)
-		print(data)
+		print('length of udt_recv data: ', len(data))
 
 		#here we simulate corruption
-		# if decide_lost():	data = flip_bits(data);
-		if decide_lost(): return None;
+		if decide_lost(): data = flip_bits(data);
 
 		return data
 	except socket.timeout: return None;
@@ -73,7 +72,8 @@ def udt_recv():
 
 def flip_bits(data):
 	print("---Trigger: data is flipped---")
-	return string_to_bin(CORRUPTED_MESSAGE)
+	# return string_to_bin(CORRUPTED_MESSAGE)
+	return None
 
 #close the channel so that the receiver can take another connect
 def udt_channel_close():
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
 	while sndcount < len(dt.bindatalist)-1:
 		data = dt.bindatalist[sndcount];
-
+		print('base: %d, next: %d' % (base_seq, next_seq))
 		# rdt_send(data)
 		if next_seq < (base_seq + N) :
 			print(next_seq, ' in total ', len(sndpkt))
@@ -130,8 +130,8 @@ if __name__ == '__main__':
 		if rcvpkt is None: continue;
 		################################## socket
 		if rcvpkt and dt.corrupt(rcvpkt) is False:
-			print('packet received')
-			base_seq = dt.getacksum(rcvpkt) + 1;
+			print('packet received, get acksum: ', dt.getacksum(rcvpkt))
+			base_seq = dt.getacksum(rcvpkt);
 			ACK = (ACK+1)%2;
 			if base_seq != next_seq: t.start();	# restart timer for base_seq pkt
 		print()
