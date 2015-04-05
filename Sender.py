@@ -27,11 +27,12 @@ def pkt_lost(pkt):
 	return None;
 
 def flip_bits(pkt):
-	print("############### Trigger: data is flipped");
 	datatransfer = rdt(SRCPORT, DESTPORT);
-	pkt = datatransfer.extract(pkt);
-	isflip = random.randint(0,len(pkt));
-	tmplist = list(pkt.decode('utf-8'));
+	data = datatransfer.extract(pkt);
+	if not data: return pkt;
+	print("############### Trigger: data is flipped");
+	isflip = random.randint(0,len(data)-1);
+	tmplist = list(data.decode('utf-8'));
 	tmplist[isflip] = '1' if tmplist[isflip] == '0' else '0';
 	return bytes(''.join(tmplist), 'utf-8')
 

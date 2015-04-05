@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
 	# init
 	ACK = 0
-	expectedseqnum = 1;
+	expectedseqnum = 0;
 	sndpkt = dt.make_pkt(0, ACK);
 
 	while True:
@@ -43,15 +43,14 @@ if __name__ == '__main__':
 					data = dt.extract(pkt);	# binary string of payload
 					# dt.delieverData(data);
 					print(dt.showdata(pkt));
+					expectedseqnum += 1;
+					ACK = (ACK+1)%2;
 					sndpkt = dt.make_pkt(expectedseqnum, ACK);
 
 					################################## socket
 					client.send(sndpkt);
 					print('Sending acksum: ', expectedseqnum);
 					################################## socket
-
-					expectedseqnum += 1;
-					ACK = (ACK+1)%2;
 
 				# default
 				################################## socket
