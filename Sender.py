@@ -18,7 +18,22 @@ DESTPORT = 9990;
 SRCPORT = 8888;
 UDT_SOCKET = None;
 
-def decide_lost(): return True if random.randint(0,100) > 60 else False;
+def decide_lost(pkt): return pkt_lost(pkt) if random.randint(0,100) > 80 else pkt;
+def decide_flip(pkt): return flip_bits(pkt) if random.randint(0,100) > 80 else pkt;
+
+def pkt_lost(pkt):
+	print("############### Trigger: data lost");
+	time.sleep(0.5);
+	return None;
+
+def flip_bits(pkt):
+	print("############### Trigger: data is flipped");
+	datatransfer = rdt(SRCPORT, DESTPORT);
+	pkt = datatransfer.extract(pkt);
+	isflip = random.randint(0,len(pkt));
+	tmplist = list(pkt.decode('utf-8'));
+	tmplist[isflip] = '1' if tmplist[isflip] == '0' else '0';
+	return bytes(''.join(tmplist), 'utf-8')
 
 def initialize_socket():
 	global UDT_SOCKET
@@ -28,23 +43,18 @@ def initialize_socket():
 		UDT_SOCKET.settimeout(1)
 
 def udt_send(pkt):
-	if decide_lost(): print("############### Trigger: data lost"); time.sleep(0.5); return;
-
-	initialize_socket()
-	UDT_SOCKET.send(pkt)
+	pkt = decide_lost(decide_flip(pkt));
+	initialize_socket();
+	if pkt is not None: UDT_SOCKET.send(pkt);
 
 def udt_recv():
 	global UDT_SOCKET
 	initialize_socket()
 	try:
-		data = UDT_SOCKET.recv(BUFFER_SIZE);
-		return flip_bits(data) if decide_lost() else data;
+		pkt = UDT_SOCKET.recv(BUFFER_SIZE);
+		return decide_lost(pkt);
 	except socket.timeout: return None;
 	except socket.error as e: print("Socket error: ", e);  return None;
-
-def flip_bits(data):
-	print("############### Trigger: data is flipped");
-	return None
 
 #close the channel so that the receiver can take another connect
 def udt_channel_close():
